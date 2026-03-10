@@ -39,7 +39,7 @@ except ImportError:
     TWILIO_OK = False
 
 # ── Configuration ──────────────────────────────────────────────────────────
-SERVER_URL   = "http://127.0.0.1:5000"   # Flask server address
+SERVER_URL   = "https://YOUR-APP-NAME.onrender.com"  # ✅ Paste your Render URL here
 TWILIO_SID   = os.environ.get("TWILIO_SID",   "")
 TWILIO_TOKEN = os.environ.get("TWILIO_TOKEN",  "")
 TWILIO_FROM  = os.environ.get("TWILIO_FROM",   "")
@@ -361,11 +361,13 @@ class App(tk.Tk):
                  text=(
 "📱  HOW FISHERMEN SHARE THEIR LOCATION:\n\n"
 "Each fisherman opens this link on their phone browser:\n"
-f"      http://YOUR_PC_IP:5000/track/FSH001\n"
-f"      http://YOUR_PC_IP:5000/track/FSH002   (different ID for each)\n\n"
-"They press START TRACKING → their GPS updates here every 60 seconds automatically.\n"
-"No app install needed. Works on any Android or iPhone with a browser.\n\n"
-"🔍 Find your PC's IP:  Open Command Prompt → type:  ipconfig  → look for IPv4 Address"
+f"      https://YOUR-GITHUB-USERNAME.github.io/YOUR-REPO/tracker.html?id=FSH001\n"
+f"      https://YOUR-GITHUB-USERNAME.github.io/YOUR-REPO/tracker.html?id=FSH002\n\n"
+"They press ▶ START TRACKING → GPS updates here every 60 seconds automatically.\n"
+"No app install needed. Works on any Android or iPhone browser.\n\n"
+"🌐 tracker.html is hosted on GitHub Pages\n"
+"☁️  Location data is stored on your Render.com backend server\n"
+"🖥️  This app fetches live positions from the Render server every 30 seconds"
                  )).pack(fill="x")
 
     def _manual_refresh(self):
@@ -875,20 +877,21 @@ f"      http://YOUR_PC_IP:5000/track/FSH002   (different ID for each)\n\n"
                  bg=self.CARD, fg=self.SUB, font=("Consolas",10),
                  text=(
 "📋  QUICK SETUP GUIDE\n\n"
-"1.  pip install twilio requests flask flask-cors\n\n"
-"2.  Run server:   python server.py\n"
-"    Find your PC IP in Command Prompt:  ipconfig  (look for IPv4 Address)\n\n"
-"3.  Share tracker link with each fisherman:\n"
-"    http://YOUR_PC_IP:5000/track/FSH001\n"
-"    http://YOUR_PC_IP:5000/track/FSH002  (different number per fisherman)\n\n"
-"4.  Fisherman opens link on phone → presses ▶ START TRACKING\n"
-"    Their GPS updates here every 60 seconds automatically\n\n"
-"5.  Sign up free at twilio.com → get SID, Token, Phone Number\n"
-"    Verify each fisherman's phone in Twilio Console\n"
+"1.  pip install twilio requests\n\n"
+"2.  Deploy server.py to Render.com (free):\n"
+"    → Push server.py + requirements.txt to a GitHub repo\n"
+"    → render.com → New Web Service → connect repo\n"
+"    → Start Command: gunicorn server:app\n"
+"    → Copy your Render URL (e.g. https://fisherman-safety.onrender.com)\n\n"
+"3.  Paste Render URL into 'Flask Server URL' field above → Save & Apply\n\n"
+"4.  Share tracker link with each fisherman (hosted on GitHub Pages):\n"
+"    https://YOUR-USERNAME.github.io/YOUR-REPO/tracker.html?id=FSH001\n"
+"    https://YOUR-USERNAME.github.io/YOUR-REPO/tracker.html?id=FSH002\n\n"
+"5.  Also update SERVER_URL inside tracker.html to your Render URL,\n"
+"    then push the updated tracker.html back to GitHub.\n\n"
+"6.  Sign up free at twilio.com → get SID, Token, Phone Number\n"
 "    Paste credentials above → Save & Apply\n\n"
-"6.  In SOS Alert tab → type distress coordinates → click 🔴 SEND SOS\n"
-"    App uses REAL-TIME fisherman positions to find nearest ones\n"
-"    Twilio calls their phones with alarm + sends SMS with GPS coordinates"
+"7.  In SOS Alert tab → enter distress coordinates → click 🔴 SEND SOS"
                  )).pack(fill="x")
 
     def _save_cfg(self):
