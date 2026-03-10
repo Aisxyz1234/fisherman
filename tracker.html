@@ -387,6 +387,143 @@
     display: none;
     line-height: 1.6;
   }
+
+  /* ── SOS Modal Overlay ── */
+  .sos-overlay {
+    display: none;
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(0,0,0,0.85);
+    z-index: 999;
+    align-items: flex-end;
+    justify-content: center;
+  }
+  .sos-overlay.open { display: flex; }
+
+  .sos-panel {
+    background: #0D1F38;
+    border: 2px solid var(--red);
+    border-bottom: none;
+    border-radius: 20px 20px 0 0;
+    padding: 24px 20px 36px;
+    width: 100%;
+    max-width: 420px;
+    animation: slideUp 0.3s ease;
+    box-shadow: 0 -10px 40px rgba(255,78,80,0.3);
+  }
+
+  @keyframes slideUp {
+    from { transform: translateY(100%); }
+    to   { transform: translateY(0); }
+  }
+
+  .sos-panel-title {
+    font-family: 'Orbitron', monospace;
+    font-size: 18px;
+    font-weight: 900;
+    color: var(--red);
+    text-align: center;
+    margin-bottom: 6px;
+    letter-spacing: 2px;
+  }
+
+  .sos-panel-sub {
+    font-size: 11px;
+    color: var(--sub);
+    text-align: center;
+    margin-bottom: 18px;
+    letter-spacing: 1px;
+  }
+
+  .sos-quick-label {
+    font-size: 10px;
+    color: var(--sub);
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    margin-bottom: 10px;
+  }
+
+  .sos-quick-btns {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    margin-bottom: 16px;
+  }
+
+  .sos-quick-btn {
+    background: rgba(255,78,80,0.12);
+    border: 1px solid rgba(255,78,80,0.4);
+    border-radius: 10px;
+    color: var(--text);
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 12px;
+    padding: 10px 8px;
+    cursor: pointer;
+    text-align: center;
+    transition: all 0.2s;
+  }
+
+  .sos-quick-btn:active,
+  .sos-quick-btn.selected {
+    background: rgba(255,78,80,0.35);
+    border-color: var(--red);
+    color: #fff;
+  }
+
+  .sos-msg-label {
+    font-size: 10px;
+    color: var(--sub);
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    margin-bottom: 8px;
+  }
+
+  .sos-msg-input {
+    width: 100%;
+    background: #0A1628;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    color: var(--text);
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 13px;
+    padding: 12px 14px;
+    resize: none;
+    outline: none;
+    margin-bottom: 18px;
+    line-height: 1.5;
+  }
+
+  .sos-msg-input:focus { border-color: var(--red); }
+
+  .sos-send-btn {
+    width: 100%;
+    padding: 18px;
+    background: var(--red);
+    color: white;
+    border: none;
+    border-radius: 14px;
+    font-family: 'Orbitron', monospace;
+    font-size: 15px;
+    font-weight: 900;
+    letter-spacing: 3px;
+    cursor: pointer;
+    margin-bottom: 10px;
+    box-shadow: 0 0 20px rgba(255,78,80,0.5);
+  }
+
+  .sos-send-btn:active { transform: scale(0.98); }
+
+  .sos-cancel-btn {
+    width: 100%;
+    padding: 12px;
+    background: transparent;
+    color: var(--sub);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 13px;
+    cursor: pointer;
+  }
 </style>
 </head>
 <body>
@@ -482,7 +619,7 @@
   </div>
 
   <!-- SOS Button -->
-  <button class="sos-btn" onclick="sendSOS()">🆘  SOS EMERGENCY</button>
+  <button class="sos-btn" onclick="openSOSPanel()">🆘  SOS EMERGENCY</button>
 
   <div class="footer-note">
     Keep this page open while at sea.<br>
@@ -490,6 +627,31 @@
     In emergency, press SOS button above.
   </div>
 
+</div>
+
+<!-- SOS Modal Panel -->
+<div class="sos-overlay" id="sosOverlay">
+  <div class="sos-panel">
+    <div class="sos-panel-title">🆘 SOS EMERGENCY</div>
+    <div class="sos-panel-sub">DESCRIBE YOUR DISTRESS — COAST GUARD WILL BE NOTIFIED</div>
+
+    <div class="sos-quick-label">Quick Select</div>
+    <div class="sos-quick-btns">
+      <button class="sos-quick-btn" onclick="selectQuick(this, '🔥 Fire on board')">🔥 Fire on board</button>
+      <button class="sos-quick-btn" onclick="selectQuick(this, '🌊 Taking on water')">🌊 Taking on water</button>
+      <button class="sos-quick-btn" onclick="selectQuick(this, '⚙️ Engine failure')">⚙️ Engine failure</button>
+      <button class="sos-quick-btn" onclick="selectQuick(this, '🤕 Medical emergency')">🤕 Medical emergency</button>
+      <button class="sos-quick-btn" onclick="selectQuick(this, '🌪️ Capsizing risk')">🌪️ Capsizing risk</button>
+      <button class="sos-quick-btn" onclick="selectQuick(this, '⛽ Out of fuel')">⛽ Out of fuel</button>
+    </div>
+
+    <div class="sos-msg-label">Additional Details (optional)</div>
+    <textarea class="sos-msg-input" id="sosMessage" rows="3"
+      placeholder="Describe what happened, number of people on board, boat color..."></textarea>
+
+    <button class="sos-send-btn" onclick="sendSOS()">🆘  SEND SOS NOW</button>
+    <button class="sos-cancel-btn" onclick="closeSOSPanel()">✕  Cancel</button>
+  </div>
 </div>
 
 <script>
@@ -666,21 +828,44 @@
     }, 1000);
   }
 
-  // ── SOS emergency ─────────────────────────────────────────
-  function sendSOS() {
-    if (!confirm("🆘 SEND SOS EMERGENCY ALERT?\n\nThis will immediately notify the Coast Guard with your current location.")) return;
+  // ── SOS Panel ─────────────────────────────────────────────
+  let selectedQuick = "";
 
+  function openSOSPanel() {
     if (!currentLat) {
       alert("⚠️ No GPS fix yet. Please wait for GPS to lock first.");
       return;
     }
+    selectedQuick = "";
+    document.getElementById("sosMessage").value = "";
+    document.querySelectorAll(".sos-quick-btn").forEach(b => b.classList.remove("selected"));
+    document.getElementById("sosOverlay").classList.add("open");
+  }
+
+  function closeSOSPanel() {
+    document.getElementById("sosOverlay").classList.remove("open");
+  }
+
+  function selectQuick(btn, text) {
+    document.querySelectorAll(".sos-quick-btn").forEach(b => b.classList.remove("selected"));
+    btn.classList.add("selected");
+    selectedQuick = text;
+  }
+
+  // ── SOS emergency ─────────────────────────────────────────
+  function sendSOS() {
+    const extraMsg = document.getElementById("sosMessage").value.trim();
+    const distressMsg = [selectedQuick, extraMsg].filter(Boolean).join(" — ") || "Emergency";
+
+    closeSOSPanel();
 
     const payload = {
       id:       FISHERMAN_ID + "_SOS",
       name:     "🆘 SOS: " + fishermanName,
       lat:      currentLat,
       lon:      currentLon,
-      accuracy: currentAcc || 0
+      accuracy: currentAcc || 0,
+      message:  distressMsg
     };
 
     fetch(SERVER_URL + "/update_location", {
@@ -689,8 +874,8 @@
       body:    JSON.stringify(payload)
     })
     .then(() => {
-      alert("✅ SOS SENT!\n\nCoast Guard has been notified of your location.\nStay calm. Help is on the way.\n\nCoast Guard: 112");
-      addLog("err", "🆘 SOS EMERGENCY SENT!");
+      alert("✅ SOS SENT!\n\nDistress: " + distressMsg + "\n\nCoast Guard has been notified.\nStay calm. Help is on the way.\n\nCoast Guard: 112");
+      addLog("err", "🆘 SOS SENT: " + distressMsg);
     })
     .catch(() => {
       alert("❌ SOS failed to send.\n\nPlease call Coast Guard directly: 112");
