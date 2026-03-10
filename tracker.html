@@ -494,8 +494,14 @@
 
 <script>
   // ── Configuration ─────────────────────────────────────────
-  const FISHERMAN_ID  = "__FISHERMAN_ID__";
-  const SERVER_URL    = "__SERVER_URL__";
+  // Fisherman ID from URL: tracker.html?id=FSH001
+  // If no ?id= param, falls back to "FSH001"
+  const params        = new URLSearchParams(window.location.search);
+  const FISHERMAN_ID  = params.get("id") || "FSH001";
+
+  // ✅ PASTE YOUR RENDER URL HERE (e.g. https://fisherman-safety.onrender.com)
+  const SERVER_URL    = "https://YOUR-APP-NAME.onrender.com";
+
   const UPDATE_INTERVAL = 60; // seconds
 
   // ── State ─────────────────────────────────────────────────
