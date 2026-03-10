@@ -1,0 +1,714 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>Fisherman Safety Tracker</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Share+Tech+Mono&display=swap');
+
+  :root {
+    --ocean:   #0A1628;
+    --deep:    #0D1F38;
+    --panel:   #0F2A48;
+    --card:    #132847;
+    --cyan:    #00C6FF;
+    --green:   #00E676;
+    --red:     #FF4E50;
+    --amber:   #FFB300;
+    --text:    #E8F4FD;
+    --sub:     #7EB8D4;
+    --border:  #1E3A5F;
+  }
+
+  * { margin:0; padding:0; box-sizing:border-box; }
+
+  body {
+    background: var(--ocean);
+    color: var(--text);
+    font-family: 'Share Tech Mono', monospace;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    overflow-x: hidden;
+  }
+
+  /* Animated ocean waves background */
+  body::before {
+    content: '';
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background:
+      radial-gradient(ellipse at 20% 50%, rgba(0,198,255,0.06) 0%, transparent 60%),
+      radial-gradient(ellipse at 80% 20%, rgba(0,100,200,0.08) 0%, transparent 50%),
+      radial-gradient(ellipse at 50% 80%, rgba(0,50,150,0.05) 0%, transparent 60%);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .container {
+    position: relative;
+    z-index: 1;
+    width: 100%;
+    max-width: 420px;
+    padding: 20px 16px 40px;
+  }
+
+  /* ── Header ── */
+  .header {
+    text-align: center;
+    padding: 24px 0 20px;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 24px;
+  }
+
+  .anchor-icon {
+    font-size: 48px;
+    display: block;
+    margin-bottom: 8px;
+    animation: float 3s ease-in-out infinite;
+  }
+
+  @keyframes float {
+    0%, 100% { transform: translateY(0px); }
+    50%       { transform: translateY(-8px); }
+  }
+
+  .header h1 {
+    font-family: 'Orbitron', monospace;
+    font-size: 18px;
+    font-weight: 900;
+    color: var(--cyan);
+    letter-spacing: 2px;
+    text-transform: uppercase;
+  }
+
+  .header p {
+    font-size: 12px;
+    color: var(--sub);
+    margin-top: 6px;
+    letter-spacing: 1px;
+  }
+
+  /* ── Fisherman ID badge ── */
+  .id-badge {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 16px 20px;
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+
+  .id-badge .icon { font-size: 32px; }
+
+  .id-badge .info { flex: 1; }
+
+  .id-badge .label {
+    font-size: 10px;
+    color: var(--sub);
+    letter-spacing: 2px;
+    text-transform: uppercase;
+  }
+
+  .id-badge .value {
+    font-family: 'Orbitron', monospace;
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--cyan);
+    margin-top: 2px;
+  }
+
+  .id-badge .name {
+    font-size: 13px;
+    color: var(--text);
+    margin-top: 2px;
+  }
+
+  /* ── Status card ── */
+  .status-card {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 20px;
+    margin-bottom: 20px;
+    text-align: center;
+  }
+
+  .status-dot {
+    width: 18px; height: 18px;
+    border-radius: 50%;
+    display: inline-block;
+    margin-right: 8px;
+    vertical-align: middle;
+    animation: pulse-dot 1.5s ease-in-out infinite;
+  }
+
+  .status-dot.active  { background: var(--green); box-shadow: 0 0 12px var(--green); }
+  .status-dot.waiting { background: var(--amber); box-shadow: 0 0 12px var(--amber); }
+  .status-dot.error   { background: var(--red);   box-shadow: 0 0 12px var(--red);   }
+  .status-dot.off     { background: var(--sub);   box-shadow: none; animation: none; }
+
+  @keyframes pulse-dot {
+    0%,100% { opacity: 1; transform: scale(1); }
+    50%      { opacity: 0.6; transform: scale(0.85); }
+  }
+
+  .status-text {
+    font-size: 15px;
+    font-weight: bold;
+    vertical-align: middle;
+  }
+
+  .status-text.active  { color: var(--green); }
+  .status-text.waiting { color: var(--amber); }
+  .status-text.error   { color: var(--red);   }
+
+  .next-update {
+    font-size: 11px;
+    color: var(--sub);
+    margin-top: 8px;
+    letter-spacing: 1px;
+  }
+
+  /* ── GPS data grid ── */
+  .gps-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-bottom: 20px;
+  }
+
+  .gps-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 14px 16px;
+  }
+
+  .gps-card .gps-label {
+    font-size: 10px;
+    color: var(--sub);
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    margin-bottom: 6px;
+  }
+
+  .gps-card .gps-value {
+    font-family: 'Orbitron', monospace;
+    font-size: 14px;
+    color: var(--cyan);
+    word-break: break-all;
+  }
+
+  .gps-card.full {
+    grid-column: span 2;
+  }
+
+  /* ── Countdown ring ── */
+  .countdown-wrap {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 20px;
+    gap: 20px;
+  }
+
+  .ring-container {
+    position: relative;
+    width: 90px; height: 90px;
+  }
+
+  .ring-container svg {
+    transform: rotate(-90deg);
+  }
+
+  .ring-bg { fill: none; stroke: var(--border); stroke-width: 6; }
+  .ring-fg {
+    fill: none; stroke: var(--cyan); stroke-width: 6;
+    stroke-linecap: round;
+    stroke-dasharray: 245;
+    stroke-dashoffset: 0;
+    transition: stroke-dashoffset 1s linear;
+  }
+
+  .ring-label {
+    position: absolute;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    font-family: 'Orbitron', monospace;
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--cyan);
+  }
+
+  .countdown-info { flex: 1; }
+
+  .countdown-info .ci-title {
+    font-size: 12px;
+    color: var(--sub);
+    letter-spacing: 1px;
+    text-transform: uppercase;
+  }
+
+  .countdown-info .ci-sent {
+    font-size: 13px;
+    color: var(--text);
+    margin-top: 4px;
+  }
+
+  .countdown-info .ci-count {
+    font-family: 'Orbitron', monospace;
+    font-size: 28px;
+    font-weight: 700;
+    color: var(--green);
+    margin-top: 4px;
+  }
+
+  /* ── Buttons ── */
+  .btn-start {
+    width: 100%;
+    padding: 18px;
+    background: var(--green);
+    color: #000;
+    border: none;
+    border-radius: 14px;
+    font-family: 'Orbitron', monospace;
+    font-size: 15px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    cursor: pointer;
+    margin-bottom: 12px;
+    transition: all 0.2s;
+    box-shadow: 0 0 20px rgba(0,230,118,0.3);
+  }
+
+  .btn-start:active { transform: scale(0.97); }
+  .btn-start:disabled {
+    background: var(--border);
+    color: var(--sub);
+    box-shadow: none;
+    cursor: not-allowed;
+  }
+
+  .btn-stop {
+    width: 100%;
+    padding: 14px;
+    background: transparent;
+    color: var(--red);
+    border: 1px solid var(--red);
+    border-radius: 14px;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 14px;
+    cursor: pointer;
+    margin-bottom: 20px;
+    transition: all 0.2s;
+  }
+
+  .btn-stop:active { background: rgba(255,78,80,0.1); }
+
+  /* ── Log ── */
+  .log-section {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 14px 16px;
+    margin-bottom: 16px;
+  }
+
+  .log-title {
+    font-size: 11px;
+    color: var(--sub);
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    margin-bottom: 10px;
+  }
+
+  .log-entry {
+    font-size: 11px;
+    color: var(--sub);
+    padding: 4px 0;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    gap: 8px;
+  }
+
+  .log-entry:last-child { border-bottom: none; }
+  .log-entry .log-time  { color: var(--cyan); flex-shrink: 0; }
+  .log-entry.ok   .log-msg { color: var(--green); }
+  .log-entry.err  .log-msg { color: var(--red); }
+  .log-entry.info .log-msg { color: var(--amber); }
+
+  /* ── SOS button ── */
+  .sos-btn {
+    width: 100%;
+    padding: 20px;
+    background: var(--red);
+    color: white;
+    border: none;
+    border-radius: 14px;
+    font-family: 'Orbitron', monospace;
+    font-size: 18px;
+    font-weight: 900;
+    letter-spacing: 4px;
+    cursor: pointer;
+    animation: sos-pulse 2s ease-in-out infinite;
+    box-shadow: 0 0 30px rgba(255,78,80,0.4);
+  }
+
+  @keyframes sos-pulse {
+    0%,100% { box-shadow: 0 0 30px rgba(255,78,80,0.4); }
+    50%      { box-shadow: 0 0 50px rgba(255,78,80,0.8); }
+  }
+
+  .footer-note {
+    text-align: center;
+    font-size: 11px;
+    color: var(--sub);
+    margin-top: 20px;
+    line-height: 1.6;
+  }
+
+  /* permission warning */
+  .permission-warn {
+    background: rgba(255,179,0,0.1);
+    border: 1px solid var(--amber);
+    border-radius: 12px;
+    padding: 14px 16px;
+    font-size: 12px;
+    color: var(--amber);
+    margin-bottom: 16px;
+    display: none;
+    line-height: 1.6;
+  }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <!-- Header -->
+  <div class="header">
+    <span class="anchor-icon">⚓</span>
+    <h1>Safety Tracker</h1>
+    <p>FISHERMAN SAFETY MONITORING SYSTEM</p>
+  </div>
+
+  <!-- ID Badge -->
+  <div class="id-badge">
+    <div class="icon">🐟</div>
+    <div class="info">
+      <div class="label">Fisherman ID</div>
+      <div class="value" id="displayId">FSH011</div>
+      <div class="name" id="displayName">Loading...</div>
+    </div>
+  </div>
+
+  <!-- Permission warning -->
+  <div class="permission-warn" id="permWarn">
+    ⚠️ Location permission denied.<br>
+    Please allow location access in your browser settings and refresh the page.
+  </div>
+
+  <!-- Status -->
+  <div class="status-card">
+    <div>
+      <span class="status-dot off" id="statusDot"></span>
+      <span class="status-text" id="statusText">Press START to begin tracking</span>
+    </div>
+    <div class="next-update" id="nextUpdate">Your location will be sent every 60 seconds</div>
+  </div>
+
+  <!-- GPS Data -->
+  <div class="gps-grid">
+    <div class="gps-card">
+      <div class="gps-label">📍 Latitude</div>
+      <div class="gps-value" id="dispLat">--</div>
+    </div>
+    <div class="gps-card">
+      <div class="gps-label">📍 Longitude</div>
+      <div class="gps-value" id="dispLon">--</div>
+    </div>
+    <div class="gps-card">
+      <div class="gps-label">🎯 Accuracy</div>
+      <div class="gps-value" id="dispAcc">--</div>
+    </div>
+    <div class="gps-card">
+      <div class="gps-label">🕐 Last Sent</div>
+      <div class="gps-value" id="dispTime" style="font-size:11px">--</div>
+    </div>
+  </div>
+
+  <!-- Countdown ring -->
+  <div class="countdown-wrap">
+    <div class="ring-container">
+      <svg width="90" height="90" viewBox="0 0 90 90">
+        <circle class="ring-bg" cx="45" cy="45" r="39"/>
+        <circle class="ring-fg" id="ringFg" cx="45" cy="45" r="39"/>
+      </svg>
+      <div class="ring-label" id="ringCount">60</div>
+    </div>
+    <div class="countdown-info">
+      <div class="ci-title">Next update in</div>
+      <div class="ci-sent">Total updates sent:</div>
+      <div class="ci-count" id="sentCount">0</div>
+    </div>
+  </div>
+
+  <!-- Start button -->
+  <button class="btn-start" id="startBtn" onclick="startTracking()">
+    ▶  START TRACKING
+  </button>
+
+  <!-- Stop button -->
+  <button class="btn-stop" id="stopBtn" onclick="stopTracking()" style="display:none">
+    ⏹  Stop Tracking
+  </button>
+
+  <!-- Log -->
+  <div class="log-section">
+    <div class="log-title">📡 Transmission Log</div>
+    <div id="logEntries">
+      <div class="log-entry info">
+        <span class="log-time">--:--:--</span>
+        <span class="log-msg">Waiting to start...</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- SOS Button -->
+  <button class="sos-btn" onclick="sendSOS()">🆘  SOS EMERGENCY</button>
+
+  <div class="footer-note">
+    Keep this page open while at sea.<br>
+    Your location updates automatically every 60 seconds.<br>
+    In emergency, press SOS button above.
+  </div>
+
+</div>
+
+<script>
+  // ── Configuration ─────────────────────────────────────────
+  const FISHERMAN_ID  = "__FISHERMAN_ID__";
+  const SERVER_URL    = "__SERVER_URL__";
+  const UPDATE_INTERVAL = 60; // seconds
+
+  // ── State ─────────────────────────────────────────────────
+  let isTracking   = false;
+  let intervalTimer = null;
+  let countdownTimer = null;
+  let countdown    = UPDATE_INTERVAL;
+  let sentCount    = 0;
+  let currentLat   = null;
+  let currentLon   = null;
+  let currentAcc   = null;
+  let fishermanName = "Fisherman " + FISHERMAN_ID;
+  let watchId      = null;
+
+  // ── DOM refs ─────────────────────────────────────────────
+  const statusDot  = document.getElementById("statusDot");
+  const statusText = document.getElementById("statusText");
+  const nextUpdate = document.getElementById("nextUpdate");
+  const dispLat    = document.getElementById("dispLat");
+  const dispLon    = document.getElementById("dispLon");
+  const dispAcc    = document.getElementById("dispAcc");
+  const dispTime   = document.getElementById("dispTime");
+  const ringFg     = document.getElementById("ringFg");
+  const ringCount  = document.getElementById("ringCount");
+  const sentCountEl= document.getElementById("sentCount");
+  const startBtn   = document.getElementById("startBtn");
+  const stopBtn    = document.getElementById("stopBtn");
+  const logEntries = document.getElementById("logEntries");
+  const permWarn   = document.getElementById("permWarn");
+  const displayName= document.getElementById("displayName");
+
+  // ── Load fisherman name from server ──────────────────────
+  fetch(SERVER_URL + "/locations/" + FISHERMAN_ID)
+    .then(r => r.json())
+    .then(d => { if (d.name) { fishermanName = d.name; displayName.textContent = d.name; } })
+    .catch(() => { displayName.textContent = "Not yet registered"; });
+
+  // ── Start tracking ────────────────────────────────────────
+  function startTracking() {
+    if (!navigator.geolocation) {
+      setStatus("error", "❌ GPS not supported on this device");
+      return;
+    }
+    isTracking = true;
+    startBtn.style.display = "none";
+    stopBtn.style.display  = "block";
+    setStatus("waiting", "⏳ Getting your GPS location...");
+    addLog("info", "Tracking started. Acquiring GPS...");
+
+    // Watch position continuously for best accuracy
+    watchId = navigator.geolocation.watchPosition(
+      onPositionUpdate,
+      onPositionError,
+      { enableHighAccuracy: true, timeout: 30000, maximumAge: 10000 }
+    );
+
+    // Send immediately, then every 60 seconds
+    setTimeout(() => { if (isTracking && currentLat) sendLocation(); }, 3000);
+    startCountdown();
+  }
+
+  // ── Stop tracking ─────────────────────────────────────────
+  function stopTracking() {
+    isTracking = false;
+    if (watchId) navigator.geolocation.clearWatch(watchId);
+    clearInterval(intervalTimer);
+    clearInterval(countdownTimer);
+    startBtn.style.display = "block";
+    stopBtn.style.display  = "none";
+    setStatus("off", "⏹ Tracking stopped");
+    nextUpdate.textContent = "Press START to begin tracking";
+    addLog("info", "Tracking stopped by user.");
+  }
+
+  // ── GPS position received ─────────────────────────────────
+  function onPositionUpdate(position) {
+    currentLat = position.coords.latitude;
+    currentLon = position.coords.longitude;
+    currentAcc = position.coords.accuracy;
+
+    dispLat.textContent = currentLat.toFixed(6);
+    dispLon.textContent = currentLon.toFixed(6);
+    dispAcc.textContent = currentAcc.toFixed(0) + " m";
+
+    if (statusText.className !== "status-text active") {
+      setStatus("active", "✅ GPS locked — Tracking active");
+    }
+  }
+
+  function onPositionError(error) {
+    let msg = "GPS error";
+    if (error.code === 1) {
+      msg = "Location permission denied";
+      permWarn.style.display = "block";
+      setStatus("error", "❌ Permission denied — allow location");
+    } else if (error.code === 2) {
+      msg = "GPS unavailable — retrying...";
+      setStatus("waiting", "⏳ GPS signal weak — retrying...");
+    } else if (error.code === 3) {
+      msg = "GPS timeout — retrying...";
+      setStatus("waiting", "⏳ GPS timeout — retrying...");
+    }
+    addLog("err", msg);
+  }
+
+  // ── Send location to server ───────────────────────────────
+  function sendLocation() {
+    if (!currentLat || !currentLon) {
+      addLog("err", "No GPS fix yet — skipping");
+      return;
+    }
+
+    const payload = {
+      id:       FISHERMAN_ID,
+      name:     fishermanName,
+      lat:      currentLat,
+      lon:      currentLon,
+      accuracy: currentAcc || 0
+    };
+
+    fetch(SERVER_URL + "/update_location", {
+      method:  "POST",
+      headers: { "Content-Type": "application/json" },
+      body:    JSON.stringify(payload)
+    })
+    .then(r => r.json())
+    .then(data => {
+      sentCount++;
+      sentCountEl.textContent = sentCount;
+      const t = new Date().toLocaleTimeString();
+      dispTime.textContent = t;
+      setStatus("active", "✅ Location sent to Coast Guard");
+      addLog("ok", `Sent: ${currentLat.toFixed(4)}, ${currentLon.toFixed(4)}`);
+    })
+    .catch(err => {
+      addLog("err", "Send failed: " + err.message);
+      setStatus("error", "❌ Server unreachable — retrying...");
+    });
+  }
+
+  // ── Countdown ring ────────────────────────────────────────
+  function startCountdown() {
+    countdown = UPDATE_INTERVAL;
+    clearInterval(countdownTimer);
+    clearInterval(intervalTimer);
+
+    // countdown tick every second
+    countdownTimer = setInterval(() => {
+      if (!isTracking) return;
+      countdown--;
+      ringCount.textContent = countdown;
+      const circumference = 245;
+      const offset = circumference * (1 - countdown / UPDATE_INTERVAL);
+      ringFg.style.strokeDashoffset = offset;
+      nextUpdate.textContent = `Next update in ${countdown} seconds`;
+
+      if (countdown <= 0) {
+        countdown = UPDATE_INTERVAL;
+        ringFg.style.strokeDashoffset = 0;
+        sendLocation();
+      }
+    }, 1000);
+  }
+
+  // ── SOS emergency ─────────────────────────────────────────
+  function sendSOS() {
+    if (!confirm("🆘 SEND SOS EMERGENCY ALERT?\n\nThis will immediately notify the Coast Guard with your current location.")) return;
+
+    if (!currentLat) {
+      alert("⚠️ No GPS fix yet. Please wait for GPS to lock first.");
+      return;
+    }
+
+    const payload = {
+      id:       FISHERMAN_ID + "_SOS",
+      name:     "🆘 SOS: " + fishermanName,
+      lat:      currentLat,
+      lon:      currentLon,
+      accuracy: currentAcc || 0
+    };
+
+    fetch(SERVER_URL + "/update_location", {
+      method:  "POST",
+      headers: { "Content-Type": "application/json" },
+      body:    JSON.stringify(payload)
+    })
+    .then(() => {
+      alert("✅ SOS SENT!\n\nCoast Guard has been notified of your location.\nStay calm. Help is on the way.\n\nCoast Guard: 112");
+      addLog("err", "🆘 SOS EMERGENCY SENT!");
+    })
+    .catch(() => {
+      alert("❌ SOS failed to send.\n\nPlease call Coast Guard directly: 112");
+    });
+  }
+
+  // ── UI helpers ────────────────────────────────────────────
+  function setStatus(type, msg) {
+    statusDot.className  = "status-dot " + type;
+    statusText.className = "status-text " + type;
+    statusText.textContent = msg;
+  }
+
+  function addLog(type, msg) {
+    const t = new Date().toLocaleTimeString();
+    const entry = document.createElement("div");
+    entry.className = "log-entry " + type;
+    entry.innerHTML = `<span class="log-time">${t}</span><span class="log-msg">${msg}</span>`;
+    logEntries.insertBefore(entry, logEntries.firstChild);
+    // keep only last 8 entries
+    while (logEntries.children.length > 8) {
+      logEntries.removeChild(logEntries.lastChild);
+    }
+  }
+</script>
+</body>
+</html>
