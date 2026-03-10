@@ -48,6 +48,7 @@ def update_location():
         "lat":      float(data.get("lat", 0)),
         "lon":      float(data.get("lon", 0)),
         "accuracy": float(data.get("accuracy", 0)),
+        "message":  data.get("message", ""),
         "updated":  datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     }
     print(f"[{locations[fid]['updated']}] Location updated: {fid} → "
